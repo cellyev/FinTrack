@@ -641,6 +641,33 @@ export const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 9,
+    name: '009_deduplicate_system_categories',
+    up: async (db: SQLite.SQLiteDatabase) => {
+      await db.execAsync(`
+        -- Redirect transactions that point to duplicate system categories to a single canonical system category
+        UPDATE transactions 
+        SET category_id = (
+          SELECT MIN(c_keep.id)
+          FROM categories c_keep
+          WHERE c_keep.name = (SELECT name FROM categories WHERE id = transactions.category_id)
+            AND c_keep.user_id = (SELECT user_id FROM categories WHERE id = transactions.category_id)
+            AND c_keep.is_system = 1
+        )
+        WHERE category_id IN (SELECT id FROM categories WHERE is_system = 1);
+
+        -- Delete duplicate system categories keeping only the one with lowest rowid
+        DELETE FROM categories 
+        WHERE is_system = 1 AND rowid NOT IN (
+          SELECT MIN(rowid)
+          FROM categories
+          WHERE is_system = 1
+          GROUP BY user_id, name, type
+        );
+      `);
+    },
+  },
 ];
 
 export async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {

@@ -196,13 +196,31 @@ export const DEFAULT_SYSTEM_CATEGORIES: DefaultCategoryTemplate[] = [
 ];
 
 export class EnsureDefaultCategoriesUseCase {
+  // Concurrency lock to prevent multiple simultaneous seeding
+  private static seedingPromises: Record<string, Promise<Result<Category[], DomainError>>> = {};
+
   constructor(
     private readonly categoryRepository: ICategoryRepository,
     private readonly uuidGenerator: IUuidGenerator
   ) {}
 
   public async execute(userId: string): Promise<Result<Category[], DomainError>> {
-    const listResult = await this.categoryRepository.listByUser(userId);
+    const existingPromise = EnsureDefaultCategoriesUseCase.seedingPromises[userId];
+    if (existingPromise !== undefined) {
+      return existingPromise;
+    }
+
+    const promise = this._execute(userId).finally(() => {
+      delete EnsureDefaultCategoriesUseCase.seedingPromises[userId];
+    });
+
+    EnsureDefaultCategoriesUseCase.seedingPromises[userId] = promise;
+    return promise;
+  }
+
+  private async _execute(userId: string): Promise<Result<Category[], DomainError>> {
+    // Include inactive categories to prevent re-seeding if user has archived all system categories
+    const listResult = await this.categoryRepository.listByUser(userId, undefined, true);
     if (!listResult.success) {
       return err(listResult.error);
     }

@@ -48,8 +48,8 @@ export function AccountListScreen() {
               { backgroundColor: item.account.color ?? theme.colors.primary[500] },
             ]}
           />
-          <View>
-            <AppText variant="titleMedium" style={styles.accountName}>
+          <View style={styles.cardInfoText}>
+            <AppText variant="titleMedium" style={styles.accountName} numberOfLines={1}>
               {item.account.name}
             </AppText>
             <View style={styles.typeBadge}>
@@ -59,7 +59,12 @@ export function AccountListScreen() {
             </View>
           </View>
         </View>
-        <AppText variant="titleMedium" style={styles.accountBalance}>
+        <AppText 
+          variant="titleMedium" 
+          style={styles.accountBalance}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+        >
           {item.balance.formatDisplay()}
         </AppText>
       </View>
@@ -69,11 +74,16 @@ export function AccountListScreen() {
   return (
     <AppScreen style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <AppText variant="caption" style={styles.subtitle}>
             TOTAL KEKAYAAN BERSIH
           </AppText>
-          <AppText variant="display" style={styles.totalBalance}>
+          <AppText
+            variant="display"
+            style={styles.totalBalance}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
             {totalNetWorth.formatDisplay()}
           </AppText>
         </View>
@@ -129,6 +139,10 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
     marginBottom: theme.spacing.md,
   },
+  headerLeft: {
+    flex: 1,
+    marginRight: theme.spacing.md,
+  },
   subtitle: {
     color: theme.colors.textMuted,
     marginBottom: theme.spacing.xxs,
@@ -156,6 +170,11 @@ const styles = StyleSheet.create({
   cardInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    marginRight: theme.spacing.sm,
+  },
+  cardInfoText: {
+    flex: 1,
   },
   colorDot: {
     width: 12,
@@ -179,5 +198,7 @@ const styles = StyleSheet.create({
   },
   accountBalance: {
     color: theme.colors.primary[500],
+    maxWidth: '50%',
+    textAlign: 'right',
   },
 });
