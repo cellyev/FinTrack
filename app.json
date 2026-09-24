@@ -30,6 +30,7 @@
       "expo-sqlite",
       "expo-secure-store"
     ],
+    "assetBundlePatterns": ["assets/**"],
     "scheme": "fintrack",
     "extra": {
       "router": {},

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+// xlsx library removed — replaced by lightweight inline OOXML builder (see generateExcel below)
 import { Result, ok, err, DomainError, ValidationError } from '@/core/domain/result';
 import { ITransactionRepository, TransactionFilter } from '../domain/transaction-repository.interface';
 import { IAccountRepository } from '@/features/accounts/domain/account-repository.interface';
@@ -47,6 +47,233 @@ function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lightweight OOXML (.xlsx) builder — no external dependency.
+// Produces a spec-compliant single-sheet workbook from an array-of-arrays.
+// Numbers are stored as numeric cells; everything else is an inline string.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function xmlEscape(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/** Encode a byte array to Base64 without Buffer (works in Hermes/RN). */
+function uint8ToBase64(bytes: Uint8Array): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let result = '';
+  const len = bytes.length;
+  for (let i = 0; i < len; i += 3) {
+    const b0 = bytes[i];
+    const b1 = i + 1 < len ? bytes[i + 1] : 0;
+    const b2 = i + 2 < len ? bytes[i + 2] : 0;
+    result += chars[b0 >> 2];
+    result += chars[((b0 & 3) << 4) | (b1 >> 4)];
+    result += i + 1 < len ? chars[((b1 & 15) << 2) | (b2 >> 6)] : '=';
+    result += i + 2 < len ? chars[b2 & 63] : '=';
+  }
+  return result;
+}
+
+/** Convert a string to a UTF-8 Uint8Array (no TextEncoder dependency). */
+function strToUtf8(str: string): Uint8Array {
+  const out: number[] = [];
+  for (let i = 0; i < str.length; i++) {
+    let code = str.charCodeAt(i);
+    if (code < 0x80) {
+      out.push(code);
+    } else if (code < 0x800) {
+      out.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+    } else if (code >= 0xd800 && code <= 0xdbff && i + 1 < str.length) {
+      // surrogate pair
+      const lo = str.charCodeAt(++i);
+      code = 0x10000 + ((code - 0xd800) << 10) + (lo - 0xdc00);
+      out.push(0xf0 | (code >> 18), 0x80 | ((code >> 12) & 0x3f), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+    } else {
+      out.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+    }
+  }
+  return new Uint8Array(out);
+}
+
+/** Write a 32-bit little-endian integer into buf at offset. */
+function writeUint32LE(buf: Uint8Array, offset: number, value: number): void {
+  buf[offset] = value & 0xff;
+  buf[offset + 1] = (value >> 8) & 0xff;
+  buf[offset + 2] = (value >> 16) & 0xff;
+  buf[offset + 3] = (value >> 24) & 0xff;
+}
+
+/** Write a 16-bit little-endian integer into buf at offset. */
+function writeUint16LE(buf: Uint8Array, offset: number, value: number): void {
+  buf[offset] = value & 0xff;
+  buf[offset + 1] = (value >> 8) & 0xff;
+}
+
+/** CRC-32 table (polynomial 0xEDB88320). */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[i] = c;
+  }
+  return t;
+})();
+
+function crc32(data: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (let i = 0; i < data.length; i++) crc = CRC_TABLE[(crc ^ data[i]) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+/**
+ * Build a minimal ZIP file containing the given files.
+ * No compression (store method) — xlsx readers handle this fine.
+ */
+function buildZip(files: { name: string; data: Uint8Array }[]): Uint8Array {
+  const entries: { name: Uint8Array; data: Uint8Array; crc: number; localOffset: number }[] = [];
+  let offset = 0;
+  const parts: Uint8Array[] = [];
+
+  for (const f of files) {
+    const nameBytes = strToUtf8(f.name);
+    const crc = crc32(f.data);
+    const localHeader = new Uint8Array(30 + nameBytes.length);
+    writeUint32LE(localHeader, 0, 0x04034b50); // local file signature
+    writeUint16LE(localHeader, 4, 20);          // version needed: 2.0
+    writeUint16LE(localHeader, 6, 0x0800);      // flags: UTF-8
+    writeUint16LE(localHeader, 8, 0);           // method: store
+    writeUint16LE(localHeader, 10, 0);          // last mod time
+    writeUint16LE(localHeader, 12, 0);          // last mod date
+    writeUint32LE(localHeader, 14, crc);
+    writeUint32LE(localHeader, 18, f.data.length); // compressed size
+    writeUint32LE(localHeader, 22, f.data.length); // uncompressed size
+    writeUint16LE(localHeader, 26, nameBytes.length);
+    writeUint16LE(localHeader, 28, 0); // extra field length
+    localHeader.set(nameBytes, 30);
+
+    entries.push({ name: nameBytes, data: f.data, crc, localOffset: offset });
+    offset += localHeader.length + f.data.length;
+    parts.push(localHeader, f.data);
+  }
+
+  // Central directory
+  const cdParts: Uint8Array[] = [];
+  let cdSize = 0;
+  for (const e of entries) {
+    const cdEntry = new Uint8Array(46 + e.name.length);
+    writeUint32LE(cdEntry, 0, 0x02014b50); // central dir signature
+    writeUint16LE(cdEntry, 4, 20);          // version made by
+    writeUint16LE(cdEntry, 6, 20);          // version needed
+    writeUint16LE(cdEntry, 8, 0x0800);      // flags: UTF-8
+    writeUint16LE(cdEntry, 10, 0);          // method: store
+    writeUint16LE(cdEntry, 12, 0);          // last mod time
+    writeUint16LE(cdEntry, 14, 0);          // last mod date
+    writeUint32LE(cdEntry, 16, e.crc);
+    writeUint32LE(cdEntry, 20, e.data.length);
+    writeUint32LE(cdEntry, 24, e.data.length);
+    writeUint16LE(cdEntry, 28, e.name.length);
+    writeUint16LE(cdEntry, 30, 0);  // extra
+    writeUint16LE(cdEntry, 32, 0);  // comment
+    writeUint16LE(cdEntry, 34, 0);  // disk number start
+    writeUint16LE(cdEntry, 36, 0);  // internal attr
+    writeUint32LE(cdEntry, 38, 0);  // external attr
+    writeUint32LE(cdEntry, 42, e.localOffset);
+    cdEntry.set(e.name, 46);
+    cdParts.push(cdEntry);
+    cdSize += cdEntry.length;
+  }
+
+  // End of central directory record
+  const eocd = new Uint8Array(22);
+  writeUint32LE(eocd, 0, 0x06054b50); // EOCD signature
+  writeUint16LE(eocd, 4, 0);           // disk number
+  writeUint16LE(eocd, 6, 0);           // disk with cd start
+  writeUint16LE(eocd, 8, entries.length);
+  writeUint16LE(eocd, 10, entries.length);
+  writeUint32LE(eocd, 12, cdSize);
+  writeUint32LE(eocd, 16, offset);     // offset of cd
+  writeUint16LE(eocd, 20, 0);          // comment length
+
+  const allParts = [...parts, ...cdParts, eocd];
+  const total = allParts.reduce((s, p) => s + p.length, 0);
+  const out = new Uint8Array(total);
+  let pos = 0;
+  for (const p of allParts) { out.set(p, pos); pos += p.length; }
+  return out;
+}
+
+/**
+ * Build a valid .xlsx file from an array-of-arrays and return it as a Base64 string.
+ * Numbers are stored as numeric cells; all other values are inline strings.
+ */
+function buildXlsxBase64(aoa: (string | number)[][]): string {
+  // Build sheet XML
+  let sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n`;
+  sheetXml += `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`;
+  sheetXml += `<sheetData>`;
+
+  for (let r = 0; r < aoa.length; r++) {
+    const row = aoa[r];
+    if (!row || row.length === 0) continue;
+    sheetXml += `<row r="${r + 1}">`;
+    for (let c = 0; c < row.length; c++) {
+      const cell = row[c];
+      const colLetter = String.fromCharCode(65 + c); // A-J (10 cols max; extend if needed)
+      const addr = `${colLetter}${r + 1}`;
+      if (typeof cell === 'number') {
+        sheetXml += `<c r="${addr}"><v>${cell}</v></c>`;
+      } else if (cell !== null && cell !== undefined && String(cell).length > 0) {
+        sheetXml += `<c r="${addr}" t="inlineStr"><is><t>${xmlEscape(String(cell))}</t></is></c>`;
+      }
+    }
+    sheetXml += `</row>`;
+  }
+
+  sheetXml += `</sheetData></worksheet>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+</Types>`;
+
+  const relsRoot = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+
+  const relsWb = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+</Relationships>`;
+
+  const workbook = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+          xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="Transaksi" sheetId="1" r:id="rId1"/>
+  </sheets>
+</workbook>`;
+
+  const zipBytes = buildZip([
+    { name: '[Content_Types].xml', data: strToUtf8(contentTypes) },
+    { name: '_rels/.rels',         data: strToUtf8(relsRoot) },
+    { name: 'xl/workbook.xml',     data: strToUtf8(workbook) },
+    { name: 'xl/_rels/workbook.xml.rels', data: strToUtf8(relsWb) },
+    { name: 'xl/worksheets/sheet1.xml',   data: strToUtf8(sheetXml) },
+  ]);
+
+  return uint8ToBase64(zipBytes);
 }
 
 export class ExportTransactionsUseCase {
@@ -187,26 +414,13 @@ export class ExportTransactionsUseCase {
     accountsMap: Map<string, string>,
     categoriesMap: Map<string, string>
   ): string {
-    const wb = XLSX.utils.book_new();
     const dateFormatted = new Date().toLocaleDateString('id-ID', { dateStyle: 'full' });
 
-    const headers = [
-      'No',
-      'ID Transaksi',
-      'Tanggal',
-      'Tipe',
-      'Akun Sumber',
-      'Akun Tujuan',
-      'Kategori',
-      'Pemasukan (IDR)',
-      'Pengeluaran (IDR)',
-      'Catatan',
-    ];
-
+    // ── 1. Build data rows ───────────────────────────────────────────────────
     let totalIncome = 0;
     let totalExpense = 0;
 
-    const dataRows = transactions.map((tx, idx) => {
+    const dataRows: (string | number)[][] = transactions.map((tx, idx) => {
       const amountNum = tx.amount.toDecimal();
       const srcName = tx.sourceAccountId ? accountsMap.get(tx.sourceAccountId) ?? tx.sourceAccountId : '-';
       const dstName = tx.destinationAccountId ? accountsMap.get(tx.destinationAccountId) ?? tx.destinationAccountId : '-';
@@ -238,28 +452,18 @@ export class ExportTransactionsUseCase {
         typeLabel = 'Saldo Awal';
       }
 
-      return [
-        idx + 1,
-        tx.id,
-        tx.transactionDate,
-        typeLabel,
-        srcName,
-        dstName,
-        catString,
-        incomeVal,
-        expenseVal,
-        tx.note ?? '',
-      ];
+      return [idx + 1, tx.id, tx.transactionDate, typeLabel, srcName, dstName, catString, incomeVal, expenseVal, tx.note ?? ''];
     });
 
     const netCashflow = totalIncome - totalExpense;
 
-    const aoaData: (string | number)[][] = [
+    // ── 2. Full AOA (array-of-arrays) including headers and summary ──────────
+    const aoa: (string | number)[][] = [
       ['FINTRACK - LAPORAN TRANSAKSI KEUANGAN'],
       ['Tanggal Unduh:', dateFormatted],
       ['Total Data:', `${transactions.length} transaksi`],
       [],
-      headers,
+      ['No', 'ID Transaksi', 'Tanggal', 'Tipe', 'Akun Sumber', 'Akun Tujuan', 'Kategori', 'Pemasukan (IDR)', 'Pengeluaran (IDR)', 'Catatan'],
       ...dataRows,
       [],
       ['RINGKASAN TOTAL', '', '', '', '', '', '', '', '', ''],
@@ -268,25 +472,8 @@ export class ExportTransactionsUseCase {
       ['Arus Kas Bersih (IDR)', '', '', '', '', '', '', netCashflow, '', ''],
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(aoaData);
-
-    // Set column widths for optimal display in Excel
-    ws['!cols'] = [
-      { wch: 6 },  // No
-      { wch: 38 }, // ID Transaksi
-      { wch: 14 }, // Tanggal
-      { wch: 14 }, // Tipe
-      { wch: 18 }, // Akun Sumber
-      { wch: 18 }, // Akun Tujuan
-      { wch: 24 }, // Kategori
-      { wch: 18 }, // Pemasukan
-      { wch: 18 }, // Pengeluaran
-      { wch: 32 }, // Catatan
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Transaksi');
-
-    return XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+    // ── 3. Build minimal OOXML (.xlsx) without any external library ──────────
+    return buildXlsxBase64(aoa);
   }
 
   private generatePdfHtml(

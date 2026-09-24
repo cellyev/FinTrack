@@ -25,4 +25,8 @@ export function parseEnv(rawEnv: Record<string, unknown> = process.env): EnvConf
   return result.data;
 }
 
-export const env = parseEnv(process.env);
+export const env = parseEnv({
+  EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+  EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
+});
