@@ -646,13 +646,35 @@ export const MIGRATIONS: Migration[] = [
     name: '009_deduplicate_system_categories',
     up: async (db: SQLite.SQLiteDatabase) => {
       await db.execAsync(`
-        -- Redirect transactions that point to duplicate system categories to a single canonical system category
-        UPDATE transactions 
+        -- Redirect transaction_items that point to duplicate system categories to a single canonical system category
+        UPDATE transaction_items 
         SET category_id = (
           SELECT MIN(c_keep.id)
           FROM categories c_keep
-          WHERE c_keep.name = (SELECT name FROM categories WHERE id = transactions.category_id)
-            AND c_keep.user_id = (SELECT user_id FROM categories WHERE id = transactions.category_id)
+          WHERE c_keep.name = (SELECT name FROM categories WHERE id = transaction_items.category_id)
+            AND c_keep.user_id = (SELECT user_id FROM categories WHERE id = transaction_items.category_id)
+            AND c_keep.is_system = 1
+        )
+        WHERE category_id IN (SELECT id FROM categories WHERE is_system = 1);
+
+        -- Redirect recurring_transactions
+        UPDATE recurring_transactions 
+        SET category_id = (
+          SELECT MIN(c_keep.id)
+          FROM categories c_keep
+          WHERE c_keep.name = (SELECT name FROM categories WHERE id = recurring_transactions.category_id)
+            AND c_keep.user_id = (SELECT user_id FROM categories WHERE id = recurring_transactions.category_id)
+            AND c_keep.is_system = 1
+        )
+        WHERE category_id IN (SELECT id FROM categories WHERE is_system = 1);
+
+        -- Redirect budgets
+        UPDATE budgets 
+        SET category_id = (
+          SELECT MIN(c_keep.id)
+          FROM categories c_keep
+          WHERE c_keep.name = (SELECT name FROM categories WHERE id = budgets.category_id)
+            AND c_keep.user_id = (SELECT user_id FROM categories WHERE id = budgets.category_id)
             AND c_keep.is_system = 1
         )
         WHERE category_id IN (SELECT id FROM categories WHERE is_system = 1);
