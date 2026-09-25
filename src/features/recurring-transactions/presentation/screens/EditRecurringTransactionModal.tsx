@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { DatePickerInput } from '@/core/ui/components/DatePickerInput';
@@ -45,6 +46,7 @@ export const EditRecurringTransactionModal: React.FC<EditRecurringTransactionMod
   onToggleActive,
   onDelete,
 }) => {
+  const insets = useSafeAreaInsets();
   const [amountStr, setAmountStr] = useState('');
   const [frequency, setFrequency] = useState<RecurringFrequency>('monthly');
   const [startDate, setStartDate] = useState('');
@@ -178,7 +180,7 @@ export const EditRecurringTransactionModal: React.FC<EditRecurringTransactionMod
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 32}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <View style={styles.header}>
             <AppText variant="titleLarge" style={styles.headerTitle}>
               ✏️ Edit Transaksi Berulang

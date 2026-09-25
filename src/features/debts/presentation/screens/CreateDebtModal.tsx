@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { AppInput } from '@/core/ui/components/AppInput';
@@ -42,6 +43,7 @@ export const CreateDebtModal: React.FC<CreateDebtModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const insets = useSafeAreaInsets();
   const { accounts, fetchAccounts } = useAccounts();
   const { categories, refresh: refreshCategories } = useCategoryManagement();
 
@@ -154,7 +156,7 @@ export const CreateDebtModal: React.FC<CreateDebtModalProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 32}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.header}>
               <AppText variant="titleLarge" style={styles.title}>

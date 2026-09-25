@@ -5,6 +5,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { AppInput } from '@/core/ui/components/AppInput';
@@ -29,6 +30,7 @@ export const CreateSavingsGoalModal: React.FC<CreateSavingsGoalModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [targetAmountStr, setTargetAmountStr] = useState('');
   const [currentAmountStr, setCurrentAmountStr] = useState('');
@@ -98,7 +100,7 @@ export const CreateSavingsGoalModal: React.FC<CreateSavingsGoalModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <View style={styles.header}>
               <AppText variant="titleLarge" style={styles.title}>
