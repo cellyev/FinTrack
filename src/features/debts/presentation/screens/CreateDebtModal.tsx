@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { AppInput } from '@/core/ui/components/AppInput';
+import { DatePickerInput } from '@/core/ui/components/DatePickerInput';
 import { DebtType } from '../../domain/debt';
 import { useAccounts } from '@/features/accounts/presentation/use-accounts';
 import { useCategoryManagement } from '@/features/categories/presentation/use-category-management';
@@ -233,13 +234,10 @@ export const CreateDebtModal: React.FC<CreateDebtModalProps> = ({
 
             {/* Jatuh Tempo (Opsional) */}
             <View style={styles.formGroup}>
-              <AppText variant="body" style={styles.label}>
-                Jatuh Tempo (Opsional, YYYY-MM-DD)
-              </AppText>
-              <AppInput
-                placeholder="Contoh: 2026-12-31"
+              <DatePickerInput
+                label="Jatuh Tempo (Opsional)"
                 value={dueDate}
-                onChangeText={setDueDate}
+                onChangeDate={setDueDate}
               />
             </View>
 
@@ -392,19 +390,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   errorContainer: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     padding: spacing.sm,
     borderRadius: theme.radii.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.neutral[200],
+    borderColor: colors.danger[500],
   },
   errorText: {
-    color: colors.danger[700],
+    color: colors.danger[500],
   },
   typeToggleContainer: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.neutral[100],
+    backgroundColor: theme.colors.surfaceSubtle,
     borderRadius: theme.radii.lg,
     padding: 4,
     marginBottom: spacing.md,
@@ -416,13 +414,13 @@ const styles = StyleSheet.create({
     borderRadius: theme.radii.md,
   },
   typeOptionActiveBorrowed: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: colors.danger[600],
   },
   typeOptionActiveLent: {
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.primary[600],
   },
   typeOptionText: {
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
     fontWeight: '600',
   },
   typeOptionTextActive: {
@@ -441,7 +439,7 @@ const styles = StyleSheet.create({
     color: colors.danger[500],
   },
   cashMovementSection: {
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
     padding: spacing.md,
     borderRadius: theme.radii.md,
     marginBottom: spacing.md,
@@ -469,13 +467,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.neutral[200],
+    borderTopColor: theme.colors.border,
   },
   pickerGroup: {
     marginBottom: spacing.sm,
   },
   pickerLabel: {
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
     marginBottom: 4,
     fontWeight: '600',
   },
@@ -492,14 +490,14 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   chipActive: {
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.primary[600],
     borderColor: colors.primary[500],
   },
   chipText: {
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
   },
   chipTextActive: {
-    color: colors.primary[700],
+    color: colors.white,
     fontWeight: '700',
   },
   actionButtons: {

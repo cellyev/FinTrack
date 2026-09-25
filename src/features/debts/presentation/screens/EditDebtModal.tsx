@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { AppInput } from '@/core/ui/components/AppInput';
+import { DatePickerInput } from '@/core/ui/components/DatePickerInput';
 import { Debt } from '../../domain/debt';
 import { theme } from '@/core/ui/tokens/theme';
 import { colors } from '@/core/ui/tokens/colors';
@@ -174,13 +175,10 @@ export const EditDebtModal: React.FC<EditDebtModalProps> = ({
 
             {/* Jatuh Tempo (Opsional) */}
             <View style={styles.formGroup}>
-              <AppText variant="body" style={styles.label}>
-                Jatuh Tempo (Opsional, YYYY-MM-DD)
-              </AppText>
-              <AppInput
-                placeholder="Contoh: 2026-12-31"
+              <DatePickerInput
+                label="Jatuh Tempo (Opsional)"
                 value={dueDate}
-                onChangeText={setDueDate}
+                onChangeDate={setDueDate}
               />
             </View>
 
@@ -260,15 +258,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   errorContainer: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     padding: spacing.sm,
     borderRadius: theme.radii.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.neutral[200],
+    borderColor: colors.danger[500],
   },
   errorText: {
-    color: colors.danger[700],
+    color: colors.danger[500],
   },
   formGroup: {
     marginBottom: spacing.md,
@@ -282,7 +280,7 @@ const styles = StyleSheet.create({
     color: colors.danger[500],
   },
   infoCard: {
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
     padding: spacing.md,
     borderRadius: theme.radii.md,
     marginBottom: spacing.md,
@@ -295,7 +293,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoLabel: {
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
   },
   infoValue: {
     fontWeight: '600',
