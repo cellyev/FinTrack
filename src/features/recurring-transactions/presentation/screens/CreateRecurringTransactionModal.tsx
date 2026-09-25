@@ -194,12 +194,19 @@ export const CreateRecurringTransactionModal: React.FC<CreateRecurringTransactio
                   type === 'expense' && styles.expenseActiveOption,
                 ]}
                 onPress={() => setType('expense')}
+                activeOpacity={0.7}
               >
                 <AppText
                   variant="body"
                   style={[styles.typeOptionText, type === 'expense' && styles.activeTypeText]}
                 >
-                  🔴 Pengeluaran
+                  📉 Pengeluaran
+                </AppText>
+                <AppText
+                  variant="caption"
+                  style={[styles.typeOptionSub, type === 'expense' && styles.activeTypeText]}
+                >
+                  (Uang keluar rutin)
                 </AppText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -208,12 +215,19 @@ export const CreateRecurringTransactionModal: React.FC<CreateRecurringTransactio
                   type === 'income' && styles.incomeActiveOption,
                 ]}
                 onPress={() => setType('income')}
+                activeOpacity={0.7}
               >
                 <AppText
                   variant="body"
                   style={[styles.typeOptionText, type === 'income' && styles.activeTypeText]}
                 >
-                  🟢 Pemasukan
+                  📈 Pemasukan
+                </AppText>
+                <AppText
+                  variant="caption"
+                  style={[styles.typeOptionSub, type === 'income' && styles.activeTypeText]}
+                >
+                  (Uang masuk rutin)
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -389,13 +403,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   errorBox: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     padding: spacing.sm,
     borderRadius: theme.radii.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.danger[500],
   },
   errorText: {
-    color: colors.danger[700],
+    color: colors.danger[500],
   },
   scrollBody: {
     marginBottom: spacing.md,
@@ -413,27 +429,32 @@ const styles = StyleSheet.create({
   },
   typeOption: {
     flex: 1,
-    paddingVertical: spacing.sm,
-    borderRadius: theme.radii.md,
+    paddingVertical: spacing.md,
+    borderRadius: theme.radii.lg,
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
   },
   expenseActiveOption: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     borderColor: colors.danger[500],
   },
   incomeActiveOption: {
-    backgroundColor: colors.success[50],
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
     borderColor: colors.success[500],
   },
   typeOptionText: {
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: theme.colors.textMuted,
+    marginBottom: 4,
+  },
+  typeOptionSub: {
+    color: theme.colors.textMuted,
+    textAlign: 'center',
   },
   activeTypeText: {
-    fontWeight: '700',
+    color: theme.colors.text,
   },
   input: {
     borderWidth: 1,
@@ -460,18 +481,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
   },
   freqChipActive: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[600],
+    backgroundColor: colors.primary[600],
+    borderColor: colors.primary[500],
   },
   freqChipText: {
     fontWeight: '600',
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
   },
   freqChipTextActive: {
-    color: colors.primary[700],
+    color: colors.white,
     fontWeight: '700',
   },
   chipScroll: {
@@ -485,18 +506,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     marginRight: spacing.xs,
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
   },
   chipActive: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[600],
+    backgroundColor: colors.primary[600],
+    borderColor: colors.primary[500],
   },
   chipText: {
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
     fontWeight: '600',
   },
   chipTextActive: {
-    color: colors.primary[700],
+    color: colors.white,
     fontWeight: '700',
   },
   footer: {

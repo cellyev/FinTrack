@@ -342,13 +342,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   errorBox: {
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     padding: spacing.sm,
     borderRadius: theme.radii.md,
     marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.danger[500],
   },
   errorText: {
-    color: colors.danger[700],
+    color: colors.danger[500],
   },
   scrollBody: {
     marginBottom: spacing.md,
@@ -384,18 +386,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignItems: 'center',
-    backgroundColor: theme.colors.neutral[50],
+    backgroundColor: theme.colors.surfaceSubtle,
   },
   freqChipActive: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[600],
+    backgroundColor: colors.primary[600],
+    borderColor: colors.primary[500],
   },
   freqChipText: {
     fontWeight: '600',
-    color: theme.colors.neutral[600],
+    color: theme.colors.textMuted,
   },
   freqChipTextActive: {
-    color: colors.primary[700],
+    color: colors.white,
     fontWeight: '700',
   },
   extraActionsRow: {
@@ -410,10 +412,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pauseBtn: {
-    backgroundColor: theme.colors.neutral[100],
+    backgroundColor: theme.colors.surfaceSubtle,
   },
   resumeBtn: {
-    backgroundColor: colors.success[50],
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
   },
   toggleBtnText: {
     fontWeight: '600',
@@ -423,11 +425,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: theme.radii.md,
-    backgroundColor: colors.danger[50],
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
     alignItems: 'center',
   },
   deleteBtnText: {
-    color: colors.danger[600],
+    color: colors.danger[500],
     fontWeight: '600',
   },
   footer: {
