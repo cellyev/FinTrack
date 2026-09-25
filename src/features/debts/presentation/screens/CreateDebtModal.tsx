@@ -177,30 +177,42 @@ export const CreateDebtModal: React.FC<CreateDebtModalProps> = ({
             ) : null}
 
             {/* Type Selector: Hutang vs Piutang */}
-            <View style={styles.typeToggleContainer}>
+            <View style={styles.typeRow}>
               <TouchableOpacity
-                style={[styles.typeOption, type === 'borrowed' && styles.typeOptionActiveBorrowed]}
+                style={[styles.typeBtn, type === 'borrowed' && styles.typeBtnBorrowed]}
                 onPress={() => setType('borrowed')}
                 activeOpacity={0.7}
               >
                 <AppText
                   variant="body"
-                  style={[styles.typeOptionText, type === 'borrowed' && styles.typeOptionTextActive]}
+                  style={[styles.typeBtnText, type === 'borrowed' && styles.typeBtnTextActive]}
                 >
-                  🔴 Hutang (Saya Pinjam)
+                  📉 Hutang
+                </AppText>
+                <AppText
+                  variant="caption"
+                  style={[styles.typeBtnSub, type === 'borrowed' && styles.typeBtnTextActive]}
+                >
+                  (Saya meminjam)
                 </AppText>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.typeOption, type === 'lent' && styles.typeOptionActiveLent]}
+                style={[styles.typeBtn, type === 'lent' && styles.typeBtnLent]}
                 onPress={() => setType('lent')}
                 activeOpacity={0.7}
               >
                 <AppText
                   variant="body"
-                  style={[styles.typeOptionText, type === 'lent' && styles.typeOptionTextActive]}
+                  style={[styles.typeBtnText, type === 'lent' && styles.typeBtnTextActive]}
                 >
-                  🟢 Piutang (Saya Pinjamkan)
+                  📈 Piutang
+                </AppText>
+                <AppText
+                  variant="caption"
+                  style={[styles.typeBtnSub, type === 'lent' && styles.typeBtnTextActive]}
+                >
+                  (Uang saya dipinjam)
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -400,32 +412,41 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.danger[500],
   },
-  typeToggleContainer: {
+  typeRow: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.surfaceSubtle,
-    borderRadius: theme.radii.lg,
-    padding: 4,
+    gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  typeOption: {
+  typeBtn: {
     flex: 1,
-    paddingVertical: spacing.sm,
+    backgroundColor: theme.colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     alignItems: 'center',
-    borderRadius: theme.radii.md,
+    justifyContent: 'center',
   },
-  typeOptionActiveBorrowed: {
-    backgroundColor: colors.danger[600],
+  typeBtnBorrowed: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderColor: colors.danger[500],
   },
-  typeOptionActiveLent: {
-    backgroundColor: colors.primary[600],
+  typeBtnLent: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    borderColor: colors.primary[500],
   },
-  typeOptionText: {
+  typeBtnText: {
     color: theme.colors.textMuted,
-    fontWeight: '600',
-  },
-  typeOptionTextActive: {
-    color: theme.colors.text,
     fontWeight: '700',
+    marginBottom: 4,
+  },
+  typeBtnTextActive: {
+    color: theme.colors.text,
+  },
+  typeBtnSub: {
+    color: theme.colors.textMuted,
+    textAlign: 'center',
   },
   formGroup: {
     marginBottom: spacing.md,
