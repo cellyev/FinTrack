@@ -201,9 +201,9 @@ describe('SQLite Migration Runner & Schema Evolution Integration Tests', () => {
     // Must execute all 8 migrations cleanly
     await expect(runMigrations(db)).resolves.not.toThrow();
 
-    // Verify all 8 migrations were applied
+    // Verify all 9 migrations were applied
     expect(simulator.schemaVersions.length).toBe(MIGRATIONS.length);
-    expect(simulator.schemaVersions.map((v) => v.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    expect(simulator.schemaVersions.map((v) => v.version)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
     // Verify savings_goals table exists with Phase 3B canonical schema
     const savingsGoalsTable = simulator.tables.get('savings_goals');
@@ -259,7 +259,7 @@ describe('SQLite Migration Runner & Schema Evolution Integration Tests', () => {
     expect(simulator.indices.get('idx_transactions_occurrence_key')).toBeDefined();
   });
 
-  it('should successfully upgrade an existing database with migrations v1-v7 already applied to v8', async () => {
+  it('should successfully upgrade an existing database with migrations v1-v7 already applied to v8 and v9', async () => {
     const db = simulator.getDb();
 
     // 1. Simulate an existing database where v1-v7 ran
@@ -282,12 +282,13 @@ describe('SQLite Migration Runner & Schema Evolution Integration Tests', () => {
     simulator.tables.get('recurring_transactions')?.rows.push({ id: 'rec-1', user_id: 'user-1', type: 'expense', amount: 500000, frequency: 'monthly' });
     simulator.tables.get('transactions')?.rows.push({ id: 'tx-1', user_id: 'user-1', amount: 50000, debt_id: 'debt-1', recurring_transaction_id: 'rec-1' });
 
-    // 2. Run runMigrations (should apply v8)
+    // 2. Run runMigrations (should apply v8 and v9)
     await expect(runMigrations(db)).resolves.not.toThrow();
 
-    // Verify migration v8 was recorded
-    expect(simulator.schemaVersions.length).toBe(8);
+    // Verify migration v8 and v9 were recorded
+    expect(simulator.schemaVersions.length).toBe(9);
     expect(simulator.schemaVersions[7].version).toBe(8);
+    expect(simulator.schemaVersions[8].version).toBe(9);
 
     // Verify existing tables & rows remain intact
     expect(simulator.tables.get('accounts')?.rows.length).toBe(1);
@@ -310,10 +311,10 @@ describe('SQLite Migration Runner & Schema Evolution Integration Tests', () => {
 
     // Run migrations first time
     await runMigrations(db);
-    expect(simulator.schemaVersions.length).toBe(8);
+    expect(simulator.schemaVersions.length).toBe(9);
 
     // Run migrations second time
     await expect(runMigrations(db)).resolves.not.toThrow();
-    expect(simulator.schemaVersions.length).toBe(8);
+    expect(simulator.schemaVersions.length).toBe(9);
   });
 });
