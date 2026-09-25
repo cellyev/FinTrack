@@ -7,6 +7,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/core/ui/components/AppText';
 import { AppButton } from '@/core/ui/components/AppButton';
 import { AppInput } from '@/core/ui/components/AppInput';
@@ -39,6 +40,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   onUpdate,
   onDelete,
 }) => {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [amountStr, setAmountStr] = useState('');
   const [periodType, setPeriodType] = useState<BudgetPeriodType>('monthly');
@@ -132,7 +134,7 @@ export const EditBudgetModal: React.FC<EditBudgetModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.categoryRow}>
@@ -366,12 +368,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   customDateRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+    flexDirection: 'column',
+    gap: spacing.md,
     marginBottom: spacing.sm,
   },
   dateInputContainer: {
-    flex: 1,
+    width: '100%',
   },
   dateLabel: {
     color: colors.neutral[400],

@@ -182,7 +182,12 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
         accessibilityLabel={`Pilih tanggal: ${formatDisplayDate(value)}`}
       >
         <View style={styles.dateInfoRow}>
-          <AppText variant="titleMedium" style={styles.dateText}>
+          <AppText 
+            variant="titleMedium" 
+            style={styles.dateText} 
+            numberOfLines={1} 
+            adjustsFontSizeToFit
+          >
             📅 {value ? formatDisplayDate(value) : 'Pilih Tanggal (Sentuh)'}
           </AppText>
           <AppText variant="caption" style={styles.changeAction}>
@@ -420,6 +425,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
+    flex: 1,
+    flexShrink: 1,
+    marginRight: spacing.xs,
     fontWeight: theme.typography.fontWeights.semibold,
     color: theme.colors.text,
   },
@@ -434,6 +442,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   presetChip: {
+    flex: 1,
+    alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: spacing.sm,
     borderRadius: theme.radii.full,
