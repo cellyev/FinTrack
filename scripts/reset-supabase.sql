@@ -13,18 +13,20 @@
 
 -- 1. Kosongkan semua tabel aplikasi (CASCADE menangani relasi foreign key secara otomatis)
 TRUNCATE TABLE 
-  public.transaction_items,
-  public.transactions,
-  public.budget_categories,
-  public.budgets,
-  public.savings_allocations,
-  public.savings_goals,
-  public.debt_payments,
-  public.debts,
-  public.recurring_transactions,
-  public.categories,
   public.accounts,
-  public.profiles
+  public.attachments,
+  public.budgets,
+  -- public.budget_categories,
+  -- public.categories,
+  public.debts,
+  -- public.debt_payments,
+  public.financial_operations,
+  public.profiles,
+  public.recurring_transactions,
+  public.savings_goals,
+  public.transaction_items,
+  public.transactions
+  -- public.savings_allocations
 CASCADE;
 
 -- 2. (OPSIONAL) Hapus seluruh user otentikasi jika Anda ingin mendaftar ulang dengan email yang sama.

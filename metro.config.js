@@ -3,6 +3,7 @@
 // Only Ionicons (used in tab nav + history screen) and Feather (used in home, input, analytics)
 // are actually imported in the source code.
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);

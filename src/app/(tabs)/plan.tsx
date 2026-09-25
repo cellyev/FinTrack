@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useScreenFocus } from '@/core/ui/hooks/use-screen-focus';
 import { AppScreen } from '@/core/ui/components/AppScreen';

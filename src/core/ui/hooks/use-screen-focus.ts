@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useCallback, useEffect } from 'react';
 import * as ExpoRouter from 'expo-router';
 
